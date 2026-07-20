@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Where Should We Go?</title>
+    <style>
+        :root {
+            --warm: #e07a5f;
+            --warm-light: #f4a261;
+            --warm-bg: #fdf8f4;
+            --warm-border: #f0e0d4;
+            --text: #2d2d2d;
+            --text-light: #6b6b6b;
+            --white: #ffffff;
+            --green: #4a9e7a;
+            --card-shadow: 0 2px 16px rgba(224, 122, 95, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--warm-bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+        .container { max-width: 1100px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 2.5rem; }
+        header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.3rem; }
+        header p { color: var(--text-light); font-size: 1rem; }
+
+        .controls {
+            display: flex; justify-content: center; gap: 0.5rem;
+            margin-bottom: 2rem; flex-wrap: wrap;
+        }
+        .controls button {
+            padding: 0.5rem 1.1rem; border: 1.5px solid var(--warm-border);
+            border-radius: 20px; background: var(--white); color: var(--text-light);
+            font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+        }
+        .controls button:hover { border-color: var(--warm); color: var(--warm); }
+        .controls button.active { background: var(--warm); border-color: var(--warm); color: var(--white); }
+
+        .dest-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+        @media (max-width: 750px) { .dest-grid { grid-template-columns: 1fr; } }
+
+        .dest-card {
+            background: var(--white); border-radius: 16px;
+            border: 1.5px solid var(--warm-border); box-shadow: var(--card-shadow);
+            padding: 1.5rem; transition: all 0.2s; position: relative;
+        }
+        .dest-card:hover { border-color: var(--warm); transform: translateY(-2px); }
+        .dest-card.favorited { border-color: var(--warm); box-shadow: 0 4px 20px rgba(224, 122, 95, 0.18); }
+
+        .dest-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+        .dest-title { font-size: 1.15rem; font-weight: 700; }
+        .dest-subtitle { font-size: 0.82rem; color: var(--text-light); margin-top: 0.15rem; }
+        .dest-badge {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.04em; padding: 0.25rem 0.6rem; border-radius: 10px;
+            background: var(--warm-bg); color: var(--warm); white-space: nowrap;
+        }
+
+        .dest-stats {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
+            margin: 0.75rem 0;
+        }
+        .stat { text-align: center; }
+        .stat-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-light); }
+        .stat-dots { margin-top: 0.2rem; }
+        .stat-dots span {
+            display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+            margin: 0 1px; background: var(--warm-border);
+        }
+        .stat-dots span.filled { background: var(--warm); }
+
+        .dest-details { font-size: 0.88rem; color: var(--text-light); margin: 0.75rem 0; }
+        .dest-details summary {
+            cursor: pointer; font-weight: 600; color: var(--text);
+            font-size: 0.85rem; margin-bottom: 0.4rem;
+        }
+        .dest-details ul { padding-left: 1.2rem; margin-top: 0.3rem; }
+        .dest-details li { margin-bottom: 0.3rem; }
+
+        .dest-weather {
+            background: var(--warm-bg); border-radius: 10px; padding: 0.6rem 0.8rem;
+            font-size: 0.82rem; margin: 0.75rem 0; display: flex; gap: 1rem; flex-wrap: wrap;
+        }
+        .dest-weather span { white-space: nowrap; }
+
+        .vote-section {
+            display: flex; gap: 1rem; margin-top: 1rem;
+            padding-top: 0.75rem; border-top: 1px solid var(--warm-border);
+        }
+        .vote-col { flex: 1; }
+        .vote-col label {
+            display: block; font-size: 0.72rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-light);
+            margin-bottom: 0.3rem;
+        }
+        .heart-vote {
+            display: flex; gap: 0.15rem;
+        }
+        .heart-vote span {
+            cursor: pointer; font-size: 1.2rem; color: var(--warm-border); transition: color 0.15s;
+        }
+        .heart-vote span.active { color: var(--warm); }
+
+        .note-input {
+            width: 100%; margin-top: 0.5rem; padding: 0.45rem 0.65rem;
+            border: 1px solid var(--warm-border); border-radius: 8px; font-size: 0.82rem;
+            font-family: inherit; background: var(--warm-bg); color: var(--text);
+        }
+        .note-input:focus { outline: none; border-color: var(--warm); }
+
+        .summary-bar {
+            margin-top: 2.5rem; background: var(--white); border-radius: 16px;
+            border: 1.5px solid var(--warm-border); padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        .summary-bar h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; color: var(--warm); }
+        .ranking-list { list-style: none; }
+        .ranking-list li {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.6rem 0; border-bottom: 1px solid var(--warm-border);
+        }
+        .ranking-list li:last-child { border-bottom: none; }
+        .rank-num {
+            font-size: 1.1rem; font-weight: 700; color: var(--warm);
+            width: 2rem; text-align: center;
+        }
+        .rank-name { flex: 1; font-weight: 600; margin-left: 0.5rem; }
+        .rank-score { font-size: 0.85rem; color: var(--text-light); }
+
+        .action-bar {
+            text-align: center; margin-top: 1.5rem; padding-top: 1rem;
+            border-top: 1px solid var(--warm-border);
+        }
+        .btn {
+            padding: 0.6rem 1.3rem; border: none; border-radius: 10px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-warm { background: var(--warm); color: var(--white); margin: 0 0.3rem; }
+        .btn-warm:hover { background: #c96a52; }
+        .btn-outline { background: transparent; border: 1.5px solid var(--warm-border); color: var(--text); margin: 0 0.3rem; }
+        .btn-outline:hover { border-color: var(--warm); color: var(--warm); }
+
+        .toast {
+            position: fixed; bottom: 2rem; left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--text); color: var(--white);
+            padding: 0.8rem 1.5rem; border-radius: 10px; font-size: 0.9rem;
+            opacity: 0; transition: all 0.3s ease; z-index: 999;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Where Should We Go?</h1>
+        <p>Vote independently, compare together. Tap the hearts to rank each destination.</p>
+    </header>
+
+    <div class="controls">
+        <button class="active" onclick="setFilter('all')">All</button>
+        <button onclick="setFilter('landscape')">Landscape Wow</button>
+        <button onclick="setFilter('food')">Best Food</button>
+        <button onclick="setFilter('easy')">Easiest Logistics</button>
+        <button onclick="setFilter('combo')">Best Combo Trip</button>
+    </div>
+
+    <div class="dest-grid" id="dest-grid"></div>
+
+    <div class="summary-bar">
+        <h2>Our Rankings</h2>
+        <ol class="ranking-list" id="ranking-list"></ol>
+        <div class="action-bar">
+            <button class="btn btn-warm" onclick="shareResults()">Share with Joanne</button>
+            <button class="btn btn-outline" onclick="resetVotes()">Reset Votes</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const destinations = [
+    {
+        id: 'azores-lisbon',
+        title: 'Azores + Lisbon',
+        subtitle: 'Volcanic nature meets Europe\'s best food city',
+        badge: 'Top Pick',
+        tags: ['landscape','food','easy','combo'],
+        stats: { landscape: 5, urban: 5, food: 5 },
+        weather: { temp: '23-28\u00B0C (73-82\u00B0F)', rain: 'Minimal', vibe: 'Warm, golden, dry' },
+        flights: 'LAX \u2192 Lisbon direct (TAP, 11hrs), then 2.5hr hop to Azores',
+        why: [
+            'Sete Cidades crater lakes deliver the existential wow you\'re chasing',
+            'S\u00E3o Miguel is intimate and pocket-sized like St. Barts but volcanic',
+            'Lisbon matches Copenhagen\'s walkability + design with southern warmth',
+            'Insane seafood, past\u00E9is, wine \u2014 food depth rivals Tokyo',
+            'Direct flight from LAX, no layover drama',
+            'September is arguably the best month for both \u2014 warm, uncrowded, clear skies'
+        ],
+        logistics: 'No visa needed. $15k = luxury-level across both legs easily. Fly in/out of Lisbon, internal flight to Azores. Could do Azores first (adventure) \u2192 Lisbon (urban wind-down).'
+    },
+    {
+        id: 'faroe-edinburgh',
+        title: 'Faroe Islands + Edinburgh',
+        subtitle: 'Existential landscapes meet cultured city',
+        badge: 'Runner Up',
+        tags: ['landscape','combo'],
+        stats: { landscape: 5, urban: 4, food: 4 },
+        weather: { temp: '10-15\u00B0C (50-59\u00B0F)', rain: 'Frequent showers', vibe: 'Cool, dramatic, moody' },
+        flights: 'LAX \u2192 London direct, connect to Faroes via Copenhagen. Or Edinburgh first.',
+        why: [
+            '18 volcanic islands \u2014 sheer sea cliffs, waterfalls into ocean, grass-roofed villages',
+            'Pocket-sized and intimate like St. Barts but in a totally different register',
+            'September = fewer tourists, gold-green colors, trails to yourself',
+            'Edinburgh Old Town rivals any architecture in Europe, deeply walkable',
+            'Edinburgh food scene has exploded \u2014 modern Scottish + seafood',
+            'Arthur\'s Seat gives you a proper hike inside the city'
+        ],
+        logistics: 'No visa. One connection required for Faroes (via CPH or Edinburgh). Budget very comfortable at $15k. Boutique hotels + traditional guesthouses in Faroes.'
+    },
+    {
+        id: 'lofoten-norway',
+        title: 'Lofoten + Oslo/Bergen',
+        subtitle: 'Arctic drama meets Scandi design',
+        badge: 'Landscape King',
+        tags: ['landscape','combo'],
+        stats: { landscape: 5, urban: 4, food: 4 },
+        weather: { temp: '10-12\u00B0C (50-54\u00B0F)', rain: 'Some rain', vibe: 'Crisp, arctic light, aurora possible' },
+        flights: 'LAX \u2192 Oslo direct (SAS/Norwegian), then domestic to Bod\u00F8 + short hop to Lofoten',
+        why: [
+            'If Danish fjords moved you, Lofoten will break you open \u2014 peaks from Arctic sea',
+            'White sand beaches above the Arctic Circle (yes, really)',
+            'Red rorbuer fishing cabins = perfect boutique-rustic stays',
+            'September = first Northern Lights + autumn colors + empty trails',
+            'Bergen: colorful wooden houses, funicular, incredible fish market',
+            'Oslo: Munch Museum, waterfront architecture, Michelin dining'
+        ],
+        logistics: 'No visa. LAX \u2192 Oslo direct, then 1 domestic flight + short ferry/flight. Rorbuer cabins are the move for accommodation. Driving between villages is part of the magic.'
+    },
+    {
+        id: 'iceland',
+        title: 'Iceland (Ring Road / South Coast)',
+        subtitle: 'Raw volcanic power + Northern Lights',
+        badge: 'Easiest Flight',
+        tags: ['landscape','easy'],
+        stats: { landscape: 5, urban: 3, food: 3 },
+        weather: { temp: '8-13\u00B0C (46-55\u00B0F)', rain: 'Changeable daily', vibe: 'Brisk, dramatic, layering weather' },
+        flights: 'LAX \u2192 Reykjavik direct (Icelandair, ~8hrs)',
+        why: [
+            'Glaciers, waterfalls, black sand beaches, geothermal pools, lava fields \u2014 all in one trip',
+            '2026 still near solar maximum = exceptional Northern Lights in late Sept',
+            'Laugavegur trail open through mid-September for highland hiking',
+            'Shortest and easiest transatlantic flight from LAX (8 hours direct)',
+            'Self-drive gives you that intimate go-at-your-own-pace feel',
+            'Autumn colors on moss-covered lava = otherworldly'
+        ],
+        logistics: 'No visa. Direct 8hr flight. Rent a 4x4, self-drive south coast or partial ring road. Reykjavik is fun for 1-2 days but won\'t match Copenhagen/Lisbon urban depth. Boutique hotels + unique stays (igloos, geothermal lodges).'
+    },
+    {
+        id: 'slovenia',
+        title: 'Slovenia (Ljubljana + Alps)',
+        subtitle: 'One small country that has everything',
+        badge: 'Hidden Gem',
+        tags: ['landscape','food','combo'],
+        stats: { landscape: 4, urban: 4, food: 4 },
+        weather: { temp: '18-25\u00B0C (64-77\u00B0F)', rain: 'Occasional', vibe: 'Warm, ideal, golden light' },
+        flights: 'LAX \u2192 one stop (London/Frankfurt/Munich) \u2192 Ljubljana. ~12-14hrs total.',
+        why: [
+            'Ljubljana = Copenhagen vibes \u2014 car-free center, architect bridges, river cafes',
+            'Lake Bled is 50 min away and genuinely surreal',
+            'Julian Alps (Triglav) = legitimate alpine hiking with emerald rivers, few tourists',
+            'Entire country is size of New Jersey \u2014 city + lake + mountains without long drives',
+            'Food scene having a moment: local, seasonal, natural wine culture',
+            'September: warm in the city, crisp in the mountains, everything still open'
+        ],
+        logistics: 'No visa. One connection, easy. Absurdly affordable for the quality \u2014 $15k is luxury-plus here for 10 days. Rent a car for flexibility, but everything is close.'
+    },
+    {
+        id: 'portugal-coast',
+        title: 'Lisbon + Sintra + Alentejo Coast',
+        subtitle: 'Effortless beauty, single-country ease',
+        badge: 'Most Effortless',
+        tags: ['food','easy'],
+        stats: { landscape: 4, urban: 5, food: 5 },
+        weather: { temp: '24-28\u00B0C (75-82\u00B0F)', rain: 'Almost none', vibe: 'Warm, dry, golden evenings' },
+        flights: 'LAX \u2192 Lisbon direct (TAP, ~11hrs)',
+        why: [
+            'If St. Barts\' effortless luxury resonated, this is the European equivalent',
+            'Lisbon: walkable, tiled, neighborhood-by-neighborhood discovery',
+            'Sintra: palatial architecture in misty forests, 30 min from city',
+            'Alentejo coast: wild undeveloped Atlantic beaches, whitewashed villages, cork forests',
+            'What the Amalfi Coast wishes it still was \u2014 unpolished, authentic, stunning',
+            'Some of Portugal\'s best boutique hotels and wine estates'
+        ],
+        logistics: 'No visa. Direct flight LAX \u2192 Lisbon. Rent a car for Sintra + Alentejo. Total drive time under 3 hours across the whole trip. Boutique hotels in Alentejo $200-400/night. Easiest trip on this list logistically.'
+    }
+];
+
+const STORAGE_KEY = 'dest-compare-votes';
+let votes = { you: {}, joanne: {} };
+let notes = { you: {}, joanne: {} };
+let currentFilter = 'all';
+
+function init() {
+    if (window.location.hash.length > 1) {
+        try {
+            const shared = JSON.parse(decodeURIComponent(atob(window.location.hash.slice(1))));
+            votes = shared.votes || { you: {}, joanne: {} };
+            notes = shared.notes || { you: {}, joanne: {} };
+            save(true);
+            showToast('Loaded shared votes!');
+            history.replaceState(null, '', window.location.pathname);
+        } catch(e) {}
+    } else {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const d = JSON.parse(saved);
+                votes = d.votes || { you: {}, joanne: {} };
+                notes = d.notes || { you: {}, joanne: {} };
+            } catch(e) {}
+        }
+    }
+    render();
+}
+
+function save(silent) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ votes, notes }));
+    if (!silent) showToast('Saved!');
+}
+
+function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    render();
+}
+
+function render() {
+    const grid = document.getElementById('dest-grid');
+    const filtered = currentFilter === 'all'
+        ? destinations
+        : destinations.filter(d => d.tags.includes(currentFilter));
+
+    grid.innerHTML = filtered.map(d => {
+        const yv = votes.you[d.id] || 0;
+        const jv = votes.joanne[d.id] || 0;
+        const yn = notes.you[d.id] || '';
+        const jn = notes.joanne[d.id] || '';
+        const isFav = (yv + jv) >= 8;
+
+        return `<div class="dest-card ${isFav ? 'favorited' : ''}">
+            <div class="dest-header">
+                <div>
+                    <div class="dest-title">${d.title}</div>
+                    <div class="dest-subtitle">${d.subtitle}</div>
+                </div>
+                <span class="dest-badge">${d.badge}</span>
+            </div>
+
+            <div class="dest-stats">
+                <div class="stat">
+                    <div class="stat-label">Landscape</div>
+                    <div class="stat-dots">${dots(d.stats.landscape)}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Urban</div>
+                    <div class="stat-dots">${dots(d.stats.urban)}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Food</div>
+                    <div class="stat-dots">${dots(d.stats.food)}</div>
+                </div>
+            </div>
+
+            <div class="dest-weather">
+                <span><strong>Temp:</strong> ${d.weather.temp}</span>
+                <span><strong>Rain:</strong> ${d.weather.rain}</span>
+                <span><strong>Vibe:</strong> ${d.weather.vibe}</span>
+            </div>
+
+            <details class="dest-details">
+                <summary>Why this fits you two</summary>
+                <ul>${d.why.map(w => `<li>${w}</li>`).join('')}</ul>
+                <p style="margin-top:0.5rem;"><strong>Flights:</strong> ${d.flights}</p>
+                <p style="margin-top:0.3rem;"><strong>Logistics:</strong> ${d.logistics}</p>
+            </details>
+
+            <div class="vote-section">
+                <div class="vote-col">
+                    <label>You</label>
+                    <div class="heart-vote">${hearts(d.id, 'you', yv)}</div>
+                    <input class="note-input" placeholder="Your notes..."
+                        value="${escHtml(yn)}"
+                        onchange="setNote('you','${d.id}',this.value)">
+                </div>
+                <div class="vote-col">
+                    <label>Joanne</label>
+                    <div class="heart-vote">${hearts(d.id, 'joanne', jv)}</div>
+                    <input class="note-input" placeholder="Joanne's notes..."
+                        value="${escHtml(jn)}"
+                        onchange="setNote('joanne','${d.id}',this.value)">
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+
+    renderRanking();
+}
+
+function dots(n) {
+    return [1,2,3,4,5].map(i => `<span class="${i <= n ? 'filled' : ''}"></span>`).join('');
+}
+
+function hearts(destId, who, current) {
+    return [1,2,3,4,5].map(i =>
+        `<span class="${i <= current ? 'active' : ''}" onclick="vote('${who}','${destId}',${i})">&#9829;</span>`
+    ).join('');
+}
+
+function escHtml(s) {
+    return s.replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function vote(who, destId, rating) {
+    votes[who][destId] = (votes[who][destId] === rating) ? 0 : rating;
+    save(true);
+    render();
+}
+
+function setNote(who, destId, val) {
+    notes[who][destId] = val;
+    save(true);
+}
+
+function renderRanking() {
+    const ranked = destinations.map(d => ({
+        ...d,
+        yourScore: votes.you[d.id] || 0,
+        joanneScore: votes.joanne[d.id] || 0,
+        total: (votes.you[d.id] || 0) + (votes.joanne[d.id] || 0)
+    })).sort((a, b) => b.total - a.total);
+
+    const list = document.getElementById('ranking-list');
+    list.innerHTML = ranked.map((d, i) => {
+        const yLabel = d.yourScore ? `You: ${d.yourScore}` : 'You: \u2014';
+        const jLabel = d.joanneScore ? `Jo: ${d.joanneScore}` : 'Jo: \u2014';
+        return `<li>
+            <span class="rank-num">${d.total > 0 ? (i + 1) : '\u2014'}</span>
+            <span class="rank-name">${d.title}</span>
+            <span class="rank-score">${yLabel} / ${jLabel} (${d.total || '\u2014'})</span>
+        </li>`;
+    }).join('');
+}
+
+function shareResults() {
+    const data = { votes, notes };
+    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
+    const url = window.location.origin + window.location.pathname + '#' + encoded;
+    navigator.clipboard.writeText(url).then(() => {
+        showToast('Link copied! Send it to Joanne \u2014 she can vote too.');
+    }).catch(() => {
+        prompt('Copy this link:', url);
+    });
+}
+
+function resetVotes() {
+    if (!confirm('Reset all votes and notes?')) return;
+    votes = { you: {}, joanne: {} };
+    notes = { you: {}, joanne: {} };
+    save(true);
+    render();
+    showToast('Reset!');
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>
