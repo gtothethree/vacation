@@ -317,8 +317,8 @@ function init() {
     if (window.location.hash.length > 1) {
         try {
             const shared = JSON.parse(decodeURIComponent(atob(window.location.hash.slice(1))));
-            votes = shared.votes || { you: {}, joanne: {} };
-            notes = shared.notes || { you: {}, joanne: {} };
+            votes = shared.votes || { matt: {}, joanne: {} };
+            notes = shared.notes || { matt: {}, joanne: {} };
             save(true);
             showToast('Loaded shared votes!');
             history.replaceState(null, '', window.location.pathname);
@@ -328,8 +328,8 @@ function init() {
         if (saved) {
             try {
                 const d = JSON.parse(saved);
-                votes = d.votes || { you: {}, joanne: {} };
-                notes = d.notes || { you: {}, joanne: {} };
+                votes = d.votes || { matt: {}, joanne: {} };
+                notes = d.notes || { matt: {}, joanne: {} };
             } catch(e) {}
         }
     }
@@ -355,9 +355,9 @@ function render() {
         : destinations.filter(d => d.tags.includes(currentFilter));
 
     grid.innerHTML = filtered.map(d => {
-        const yv = votes.you[d.id] || 0;
+        const yv = votes.matt[d.id] || 0;
         const jv = votes.joanne[d.id] || 0;
-        const yn = notes.you[d.id] || '';
+        const yn = notes.matt[d.id] || '';
         const jn = notes.joanne[d.id] || '';
         const isFav = (yv + jv) >= 8;
 
@@ -400,11 +400,11 @@ function render() {
 
             <div class="vote-section">
                 <div class="vote-col">
-                    <label>You</label>
-                    <div class="heart-vote">${hearts(d.id, 'you', yv)}</div>
-                    <input class="note-input" placeholder="Your notes..."
+                    <label>Matt</label>
+                    <div class="heart-vote">${hearts(d.id, 'matt', yv)}</div>
+                    <input class="note-input" placeholder="Matt's notes..."
                         value="${escHtml(yn)}"
-                        onchange="setNote('you','${d.id}',this.value)">
+                        onchange="setNote('matt','${d.id}',this.value)">
                 </div>
                 <div class="vote-col">
                     <label>Joanne</label>
@@ -448,14 +448,14 @@ function setNote(who, destId, val) {
 function renderRanking() {
     const ranked = destinations.map(d => ({
         ...d,
-        yourScore: votes.you[d.id] || 0,
+        yourScore: votes.matt[d.id] || 0,
         joanneScore: votes.joanne[d.id] || 0,
-        total: (votes.you[d.id] || 0) + (votes.joanne[d.id] || 0)
+        total: (votes.matt[d.id] || 0) + (votes.joanne[d.id] || 0)
     })).sort((a, b) => b.total - a.total);
 
     const list = document.getElementById('ranking-list');
     list.innerHTML = ranked.map((d, i) => {
-        const yLabel = d.yourScore ? `You: ${d.yourScore}` : 'You: \u2014';
+        const yLabel = d.yourScore ? `Matt: ${d.yourScore}` : 'Matt: \u2014';
         const jLabel = d.joanneScore ? `Jo: ${d.joanneScore}` : 'Jo: \u2014';
         return `<li>
             <span class="rank-num">${d.total > 0 ? (i + 1) : '\u2014'}</span>
@@ -478,8 +478,8 @@ function shareResults() {
 
 function resetVotes() {
     if (!confirm('Reset all votes and notes?')) return;
-    votes = { you: {}, joanne: {} };
-    notes = { you: {}, joanne: {} };
+    votes = { matt: {}, joanne: {} };
+    notes = { matt: {}, joanne: {} };
     save(true);
     render();
     showToast('Reset!');
